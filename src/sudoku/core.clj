@@ -4,4 +4,4 @@
   (throw (UnsupportedOperationException. "Not implemented yet!")))
 
 (defn solve [puzzle]
-  nil)
+  #{[]})
