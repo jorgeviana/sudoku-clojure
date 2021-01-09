@@ -40,4 +40,6 @@
 
 (deftest solve-test
   (testing "rank 0, 0x0 puzzle"
-    (is (= #{[]} (solve [])))))
+    (is (= #{[]} (solve []))))
+  (testing "rank 1, 1x1 puzzle"
+    (is (= #{[1]} (solve [1])))))
