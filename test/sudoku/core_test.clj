@@ -41,14 +41,20 @@
     (is (= #{[]} (solve []))))
   (testing "rank 1, 1x1 puzzle"
     (is (= #{[1]} (solve [1])))
-    (with-redefs [improve (fn [puzzle] [1])]
+    (with-redefs [improve (fn [puzzle]
+                            (if (= puzzle [_]) [1]))]
       (is (= #{[1]} (solve [_])))))
   (testing "rank 2, 4x4 puzzle"
     (testing "missing one value"
-      (with-redefs [improve (fn [puzzle] [1 2 3 4
-                                          3 4 1 2
-                                          4 1 2 3
-                                          2 3 4 1])]
+      (with-redefs [improve (fn [puzzle]
+                              (if (= puzzle [_ 2 3 4
+                                             3 4 1 2
+                                             4 1 2 3
+                                             2 3 4 1])
+                                [1 2 3 4
+                                 3 4 1 2
+                                 4 1 2 3
+                                 2 3 4 1]))]
         (is (= #{[1 2 3 4
                   3 4 1 2
                   4 1 2 3
