@@ -134,4 +134,15 @@
                   2 3 4 1]} (solve [_ _ 3 4
                                     3 4 1 2
                                     4 1 2 3
-                                    _ 3 4 1])))))))
+                                    _ 3 4 1])))))
+    (testing "unsolvable puzzle"
+      (with-redefs [improve (fn [puzzle]
+                              (if (= puzzle [_ _ 2 3
+                                             _ _ _ _
+                                             1 _ _ _
+                                             4 _ _ _])
+                                nil))]
+        (is (= #{} (solve [_ _ 2 3
+                           _ _ _ _
+                           1 _ _ _
+                           4 _ _ _])))))))
