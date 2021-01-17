@@ -2,8 +2,6 @@
   (:require [clojure.test :refer :all]
             [sudoku.core :refer :all]))
 
-(def _ nil)
-
 (deftest solver-feature-test
   (testing "the 4x4 case"
     (let [empty-puzzle [_ _ _ _
@@ -43,4 +41,13 @@
     (is (= #{[]} (solve []))))
   (testing "rank 1, 1x1 puzzle"
     (is (= #{[1]} (solve [1])))
-    (is (= #{[1]} (solve [_])))))
+    (is (= #{[1]} (solve [_]))))
+  (testing "rank 2, 4x4 puzzle"
+    (testing "missing one value"
+      (is (= #{[1 2 3 4
+                3 4 1 2
+                4 1 2 3
+                2 3 4 1]} (solve [_ 2 3 4
+                                  3 4 1 2
+                                  4 1 2 3
+                                  2 3 4 1]))))))
