@@ -36,105 +36,90 @@
                     7 6 3 4 1 8 2 5 9]]
       (is (contains? (solve unsolved-puzzle) solution)))))
 
+(defn column-size [puzzle]
+  (int (Math/sqrt (count puzzle))))
+
+(defn with-puzzle [puzzle [x y] value]
+  (assoc puzzle (+ x (* y (column-size puzzle))) value))
+
+(deftest with-puzzle-test
+  (= [_ _ _ _
+      _ _ _ _
+      _ _ _ _
+      _ _ 1 _] (-> [_ _ _ _
+                    _ _ _ _
+                    _ _ _ _
+                    _ _ _ _] (with-puzzle [2 3] 1))))
+
+(def solved [1 2 3 4
+             3 4 1 2
+             4 1 2 3
+             2 3 4 1])
+
 (deftest solve-test
   (testing "rank 0, 0x0 puzzle"
     (is (= #{[]} (solve []))))
+
   (testing "rank 1, 1x1 puzzle"
     (is (= #{[1]} (solve [1])))
     (with-redefs [improve (fn [puzzle]
                             (if (= puzzle [_]) #{[1]}))]
       (is (= #{[1]} (solve [_])))))
+
   (testing "rank 2, 4x4 puzzle"
     (testing "missing one value"
-      (with-redefs [improve (fn [puzzle]
-                              (if (= puzzle [_ 2 3 4
-                                             3 4 1 2
-                                             4 1 2 3
-                                             2 3 4 1])
-                                #{[1 2 3 4
-                                   3 4 1 2
-                                   4 1 2 3
-                                   2 3 4 1]}))]
-        (is (= #{[1 2 3 4
-                  3 4 1 2
-                  4 1 2 3
-                  2 3 4 1]} (solve [_ 2 3 4
-                                    3 4 1 2
-                                    4 1 2 3
-                                    2 3 4 1])))))
+      (let [missing-one (-> solved
+                            (with-puzzle [0 0] _))]
+        (with-redefs [improve (fn [puzzle]
+                                (if (= puzzle missing-one)
+                                  #{solved}))]
+          (is (= #{solved} (solve missing-one))))))
+
     (testing "missing two values"
-      (with-redefs [improve (fn [puzzle]
-                              (cond
-                                (= puzzle [_ _ 3 4
-                                           3 4 1 2
-                                           4 1 2 3
-                                           2 3 4 1])
-                                #{[1 _ 3 4
-                                   3 4 1 2
-                                   4 1 2 3
-                                   2 3 4 1]}
+      (let [missing-two (-> solved
+                            (with-puzzle [0 0] _)
+                            (with-puzzle [1 0] _))
+            missing-one (-> solved
+                            (with-puzzle [1 0] _))]
+        (with-redefs [improve (fn [puzzle]
+                                (cond
+                                  (= puzzle missing-two)
+                                  #{missing-one}
 
-                                (= puzzle [1 _ 3 4
-                                           3 4 1 2
-                                           4 1 2 3
-                                           2 3 4 1])
-                                #{[1 2 3 4
-                                   3 4 1 2
-                                   4 1 2 3
-                                   2 3 4 1]}))]
-        (is (= #{[1 2 3 4
-                  3 4 1 2
-                  4 1 2 3
-                  2 3 4 1]} (solve [_ _ 3 4
-                                    3 4 1 2
-                                    4 1 2 3
-                                    2 3 4 1])))))
+                                  (= puzzle missing-one)
+                                  #{solved}))]
+          (is (= #{solved} (solve missing-two))))))
+
     (testing "missing three values"
-      (with-redefs [improve (fn [puzzle]
-                              (cond
-                                (= puzzle [_ _ 3 4
-                                           3 4 1 2
-                                           4 1 2 3
-                                           _ 3 4 1])
-                                #{[1 _ 3 4
-                                   3 4 1 2
-                                   4 1 2 3
-                                   _ 3 4 1]
-                                  [2 _ 3 4
-                                   3 4 1 2
-                                   4 1 2 3
-                                   _ 3 4 1]}
+      (let [missing-three [_ _ 3 4
+                           3 4 1 2
+                           4 1 2 3
+                           _ 3 4 1]]
+        (with-redefs [improve (fn [puzzle]
+                                (cond
+                                  (= puzzle missing-three)
+                                  #{(-> missing-three
+                                        (with-puzzle [0 0] 1))
+                                    (-> missing-three
+                                        (with-puzzle [0 0] 2))}
 
-                                (= puzzle [1 _ 3 4
-                                           3 4 1 2
-                                           4 1 2 3
-                                           _ 3 4 1])
-                                #{[1 2 3 4
-                                   3 4 1 2
-                                   4 1 2 3
-                                   _ 3 4 1]}
+                                  (= puzzle
+                                     (-> missing-three
+                                         (with-puzzle [0 0] 1)))
+                                  #{(-> solved
+                                        (with-puzzle [0 3] _))}
 
-                                (= puzzle [2 _ 3 4
-                                           3 4 1 2
-                                           4 1 2 3
-                                           _ 3 4 1])
-                                nil
+                                  (= puzzle
+                                     (-> missing-three
+                                         (with-puzzle [0 0] 2)))
+                                  nil
 
-                                (= puzzle [1 2 3 4
-                                           3 4 1 2
-                                           4 1 2 3
-                                           _ 3 4 1])
-                                #{[1 2 3 4
-                                   3 4 1 2
-                                   4 1 2 3
-                                   2 3 4 1]}))]
-        (is (= #{[1 2 3 4
-                  3 4 1 2
-                  4 1 2 3
-                  2 3 4 1]} (solve [_ _ 3 4
-                                    3 4 1 2
-                                    4 1 2 3
-                                    _ 3 4 1])))))
+                                  (= puzzle
+                                     (-> solved
+                                         (with-puzzle [0 3] _)))
+                                  #{solved}))]
+          (is (= #{solved} (solve missing-three))))))
+
     (testing "unsolvable puzzle"
       (with-redefs [improve (fn [puzzle]
                               (if (= puzzle [_ _ 2 3
